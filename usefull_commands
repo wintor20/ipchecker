@@ -1,0 +1,19 @@
+docker system prune
+docker image prune
+docker volume prune
+
+docker-compose logs -f
+
+go mod init ipchecker
+
+docker exec -it a14 sh
+psql -h localhost -U checker checker_db
+
+
+docker images
+docker image rm imagename
+
+
+environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}

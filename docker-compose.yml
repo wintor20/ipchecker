@@ -1,0 +1,20 @@
+version: '2'
+
+services:
+
+  db:
+    image: postgres
+    volumes:
+      - $PWD/sql:/docker-entrypoint-initdb.d/
+
+  checker:
+    restart: always
+    build: .
+    environment:
+      - POSTGRES=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db/checker_db?sslmode=disable
+      - HTTPADDR=${CHECKER_HTTP_ADDR}
+      - HTTPPORT=${CHECKER_HTTP_PORT}
+    depends_on:
+      - db
+    ports:
+      - 8098:8080

@@ -1,0 +1,7 @@
+y.PHONY: up down
+
+up:
+	docker-compose -p ipchecker --log-level ERROR up -d
+
+down:
+	docker-compose -p ipchecker down -v

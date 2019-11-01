@@ -3,13 +3,15 @@ package handlers
 import (
 	"database/sql"
 	"net/http"
+
+	"github.com/ant0ine/go-json-rest/rest"
 )
 
 type DBConnect struct {
 	DB *sql.DB
 }
 
-func (connect DBConnect) IsOk(w http.ResponseWriter, r *http.Request) {
+func (connect DBConnect) IsOk(w rest.ResponseWriter, r *rest.Request) {
 	if connect.DB == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -21,7 +23,7 @@ func (connect DBConnect) IsOk(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = w.Write([]byte("ok"))
+	_, err = w.(http.ResponseWriter).Write([]byte("ok"))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

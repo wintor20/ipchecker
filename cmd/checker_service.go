@@ -14,6 +14,7 @@ import (
 	"ipchecker/handlers"
 	"ipchecker/models"
 
+	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
@@ -116,9 +117,7 @@ func initService() (*models.ServiceInstance, error) {
 	//-----------------------------------------------------------------------
 
 	prometheus.MustRegister(prometheusMetrics.Uptime)
-
 	prometheus.MustRegister(prometheusMetrics.FuncUsed)
-
 	prometheus.MustRegister(prometheusMetrics.FuncTimeSummary)
 
 	//-------------------general struct initialize
@@ -144,13 +143,19 @@ func main() {
 		return
 	}
 
-	http.Handle("/metrics", promhttp.Handler())
-	http.HandleFunc("/isok", handlers.DBConnect{DB: instance.DB}.IsOk)
+	api := rest.NewApi()
+	router, err := rest.MakeRouter(
+		rest.Get("/isok", handlers.DBConnect{DB: instance.DB}.IsOk),
+	)
+	api.SetApp(router)
 
-	instance.Log.Print("Prometheus handlers started")
+	http.Handle("/metrics", promhttp.Handler())
+	http.Handle("/", api.MakeHandler())
+
+	instance.Log.Print("rest handlers prepared")
 
 	addr := fmt.Sprintf("%s:%s", instance.HTTPAddr, instance.HTTPPort)
-	instance.Log.Printf("Server prepared on %s", addr)
+	instance.Log.Printf("server prepared on %s", addr)
 	srv := &http.Server{Addr: addr}
 
 	instance.Log.Fatal(srv.ListenAndServe())

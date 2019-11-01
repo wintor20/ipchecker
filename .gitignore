@@ -1,0 +1,4 @@
+# IDE specific files
+.idea/
+# for compiled files
+bin/**

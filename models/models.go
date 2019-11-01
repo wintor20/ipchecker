@@ -32,3 +32,7 @@ type ServiceInstance struct {
 	HTTPAddr string
 	HTTPPort string
 }
+
+type CheckIPAnswer struct {
+	Dupes bool `json:"dupes"`
+}

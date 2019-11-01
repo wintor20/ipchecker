@@ -14,7 +14,6 @@ import (
 	"ipchecker/handlers"
 	"ipchecker/models"
 
-	"github.com/ant0ine/go-json-rest/rest"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
@@ -143,14 +142,11 @@ func main() {
 		return
 	}
 
-	api := rest.NewApi()
-	router, err := rest.MakeRouter(
-		rest.Get("/isok", handlers.DBConnect{DB: instance.DB}.IsOk),
-	)
-	api.SetApp(router)
+	rout := handlers.DBConnect{DB: instance.DB}
 
 	http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/", api.MakeHandler())
+	http.HandleFunc("/isok", rout.IsOk)
+	http.HandleFunc("/", rout.CheckIP)
 
 	instance.Log.Print("rest handlers prepared")
 

@@ -2,16 +2,19 @@ package handlers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
+	"strings"
 
-	"github.com/ant0ine/go-json-rest/rest"
+	"ipchecker/models"
 )
 
 type DBConnect struct {
 	DB *sql.DB
 }
 
-func (connect DBConnect) IsOk(w rest.ResponseWriter, r *rest.Request) {
+// IsOk checks db connection
+func (connect DBConnect) IsOk(w http.ResponseWriter, r *http.Request) {
 	if connect.DB == nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -23,9 +26,50 @@ func (connect DBConnect) IsOk(w rest.ResponseWriter, r *rest.Request) {
 		return
 	}
 
-	_, err = w.(http.ResponseWriter).Write([]byte("ok"))
+	_, err = w.Write([]byte("ok"))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+// CheckIP process GET request to check if two user_ids have at least two matching ip address
+func (connect DBConnect) CheckIP(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if connect.DB == nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ids := strings.Split(strings.TrimPrefix(r.URL.Path, `/`), `/`)
+	if len(ids) != 2 {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	var answer models.CheckIPAnswer
+	if ids[0] == ids[1] {
+		answer.Dupes = true
+	}
+
+	prepareAnswer(answer, &w)
+	return
+}
+
+func prepareAnswer(answer models.CheckIPAnswer, w *http.ResponseWriter) {
+	b, err := json.Marshal(answer)
+	if err != nil {
+		(*w).WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	_, err = (*w).Write(b)
+	if err != nil {
+		(*w).WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }

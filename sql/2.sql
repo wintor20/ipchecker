@@ -1,3 +1,5 @@
+\c checker_db checker
+
 BEGIN;
 
 CREATE TABLE conn_log (

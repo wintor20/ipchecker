@@ -11,7 +11,7 @@ $$ LANGUAGE sql;
 -- mock data
 INSERT INTO conn_log (user_id, ip_addr, ts)
 SELECT
-       rand(1500),
+       rand(10000),
        rand(255)||'.'||rand(255)||'.'||rand(255)||'.'||rand(255),
        now() + (rand(100)::varchar||'h')::interval
 FROM generate_series(1, 50);

@@ -13,6 +13,7 @@ import (
 
 	"ipchecker/handlers"
 	"ipchecker/models"
+	"ipchecker/util"
 
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
@@ -142,7 +143,13 @@ func main() {
 		return
 	}
 
-	rout := handlers.DBConnect{DB: instance.DB}
+	ipLib, err := util.LoadIPMap(instance.DB)
+	if err != nil {
+		instance.Log.Fatal(err.Error())
+		return
+	}
+
+	rout := handlers.DBConnect{DB: instance.DB, IpLib: ipLib}
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/isok", rout.IsOk)

@@ -7,10 +7,12 @@ import (
 	"strings"
 
 	"ipchecker/models"
+	"ipchecker/util"
 )
 
 type DBConnect struct {
-	DB *sql.DB
+	DB    *sql.DB
+	IpLib map[string]map[string]map[string]map[string]map[string]string
 }
 
 // IsOk checks db connection
@@ -55,6 +57,8 @@ func (connect DBConnect) CheckIP(w http.ResponseWriter, r *http.Request) {
 	var answer models.CheckIPAnswer
 	if ids[0] == ids[1] {
 		answer.Dupes = true
+	} else {
+		answer.Dupes = util.CheckDupesInIPMap(connect.IpLib, ids[0], ids[1])
 	}
 
 	prepareAnswer(answer, &w)

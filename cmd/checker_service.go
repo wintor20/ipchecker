@@ -23,9 +23,9 @@ import (
 
 const (
 	// DBConnectAttempts количество повторов попыток соединения с бд
-	DBConnectAttempts = 2
+	DBConnectAttempts = 5
 	// DBConnectAttemptInterval интервал между попытками в секундах
-	DBConnectAttemptInterval = 2
+	DBConnectAttemptInterval = 5
 )
 
 // WaitFor - повторяет вызов ф-ии до победного
@@ -143,7 +143,7 @@ func main() {
 		return
 	}
 
-	ipLib, err := util.LoadIPMap(instance.DB)
+	ipLib, err := util.LoadIPMap(instance)
 	if err != nil {
 		instance.Log.Fatal(err.Error())
 		return

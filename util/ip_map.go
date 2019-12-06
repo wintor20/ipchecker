@@ -1,20 +1,21 @@
 package util
 
 import (
-	"database/sql"
 	"errors"
 	"strconv"
 	"strings"
+
+	"ipchecker/models"
 )
 
-func LoadIPMap(db *sql.DB) (map[string]map[string]map[string]map[string]map[string]interface{}, error) {
-	if db == nil {
+func LoadIPMap(instance *models.ServiceInstance) (map[string]map[string]map[string]map[string]map[string]interface{}, error) {
+	if instance == nil || instance.DB == nil {
 		return nil, errors.New("db connection is nil")
 	}
 	ipLib := map[string]map[string]map[string]map[string]map[string]interface{}{}
 
 	// postgres
-	rows, err := db.Query("SELECT user_id, ip_addr FROM conn_log")
+	rows, err := instance.DB.Query("SELECT user_id, ip_addr FROM conn_log")
 	if err != nil {
 		return nil, err
 	}
@@ -22,12 +23,20 @@ func LoadIPMap(db *sql.DB) (map[string]map[string]map[string]map[string]map[stri
 
 	var userID int64
 	var ip string
+	inserted := 0
+	tenThNum := 0
 	for rows.Next() {
 		err = rows.Scan(&userID, &ip)
 		if err != nil {
 			return nil, err
 		}
 		insertInIPMap(ipLib, userID, ip)
+		inserted += 1
+		if inserted > 100000 {
+			inserted = 0
+			tenThNum += 1
+			instance.Log.Printf("%d00 000 loaded", tenThNum)
+		}
 	}
 
 	// get any error encountered during iteration

@@ -11,8 +11,10 @@ import (
 )
 
 type DBConnect struct {
-	DB    *sql.DB
-	IpLib map[string]map[string]map[string]map[string]map[string]interface{}
+	DB        *sql.DB
+	IpLib     map[string]map[string]map[string]map[string]map[string]interface{}
+	Dupes     map[string]interface{}
+	Potential map[string]interface{}
 }
 
 // IsOk checks db connection
@@ -55,7 +57,7 @@ func (connect DBConnect) CheckIP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var answer models.CheckIPAnswer
-	answer.Dupes = util.CheckDupesInIPMap(connect.IpLib, ids[0], ids[1])
+	answer.Dupes = util.CheckDupesInIPMap(connect.Dupes, ids[0], ids[1])
 	prepareAnswer(answer, &w)
 	return
 }

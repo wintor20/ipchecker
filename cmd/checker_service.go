@@ -17,15 +17,13 @@ import (
 
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 const (
 	// DBConnectAttempts количество повторов попыток соединения с бд
 	DBConnectAttempts = 5
 	// DBConnectAttemptInterval интервал между попытками в секундах
-	DBConnectAttemptInterval = 5
+	DBConnectAttemptInterval = 10
 )
 
 // WaitFor - повторяет вызов ф-ии до победного
@@ -88,42 +86,6 @@ func initService() (*models.ServiceInstance, error) {
 	instance.HTTPPort = cfg.HTTPPort
 	instance.Log.Printf("Config loaded %s", cfg)
 
-	//------------------------------prometheus
-
-	var prometheusMetrics models.Metrics
-
-	prometheusMetrics.Uptime = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "checker_uptime",
-		Help: "How many seconds checker worked",
-	})
-
-	prometheusMetrics.DeliveredCommands = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "checker_delivered_commands",
-		Help: "Total number of delivered commands to checker general channel",
-	})
-
-	//-------------------------------LABELED METRICS----------------------------------------------
-
-	prometheusMetrics.FuncUsed = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "checker_func_used",
-		Help: "Number of func usages",
-	}, []string{"function", "code"})
-
-	prometheusMetrics.FuncTimeSummary = prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name: "checker_request_time",
-		Help: "Time of request",
-	}, []string{"function", "success"})
-
-	//-----------------------------------------------------------------------
-
-	prometheus.MustRegister(prometheusMetrics.Uptime)
-	prometheus.MustRegister(prometheusMetrics.FuncUsed)
-	prometheus.MustRegister(prometheusMetrics.FuncTimeSummary)
-
-	//-------------------general struct initialize
-
-	instance.PMetrics = &prometheusMetrics
-
 	//-----------------DB stuff
 	db, err := DbConnect(cfg.Postgres, instance.Log)
 	if err != nil {
@@ -143,15 +105,14 @@ func main() {
 		return
 	}
 
-	ipLib, err := util.LoadIPMap(instance)
+	_, _, dupes, err := util.LoadIPMap(instance)
 	if err != nil {
 		instance.Log.Fatal(err.Error())
 		return
 	}
 
-	rout := handlers.DBConnect{DB: instance.DB, IpLib: ipLib}
+	rout := handlers.DBConnect{DB: instance.DB, Dupes: dupes}
 
-	http.Handle("/metrics", promhttp.Handler())
 	http.HandleFunc("/isok", rout.IsOk)
 	http.HandleFunc("/", rout.CheckIP)
 

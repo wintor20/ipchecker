@@ -3,8 +3,6 @@ package models
 import (
 	"database/sql"
 	"log"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type Config struct {
@@ -13,22 +11,9 @@ type Config struct {
 	HTTPPort string `default:""`
 }
 
-type Metrics struct {
-	Uptime prometheus.Counter
-
-	DeliveredCommands prometheus.Gauge
-
-	FuncUsed *prometheus.CounterVec
-
-	FuncTimeSummary *prometheus.SummaryVec
-}
-
 type ServiceInstance struct {
-	DB *sql.DB
-
-	PMetrics *Metrics
+	DB       *sql.DB
 	Log      *log.Logger
-
 	HTTPAddr string
 	HTTPPort string
 }

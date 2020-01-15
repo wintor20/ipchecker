@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,6 +10,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"ipchecker/handlers"
@@ -119,11 +122,27 @@ func main() {
 	instance.Log.Print("rest handlers prepared")
 
 	addr := fmt.Sprintf("%s:%s", instance.HTTPAddr, instance.HTTPPort)
-	instance.Log.Printf("server prepared on %s", addr)
 	srv := &http.Server{Addr: addr}
 
-	instance.Log.Fatal(srv.ListenAndServe())
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, syscall.SIGINT, syscall.SIGTERM)
 
-	return
+	go func() {
+		instance.Log.Fatal(srv.ListenAndServe())
+	}()
+	instance.Log.Printf("server started on %s", addr)
 
+	<-done
+	instance.Log.Printf("server stoped on %s", addr)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer func() {
+		cancel()
+	}()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("server shutdown failed:%+v", err)
+	}
+
+	instance.Log.Printf("server hadlers stoped gracefully on %s", addr)
 }

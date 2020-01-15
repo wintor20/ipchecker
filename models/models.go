@@ -6,9 +6,9 @@ import (
 )
 
 type Config struct {
-	Postgres string `default:""`
-	HTTPAddr string `default:""`
-	HTTPPort string `default:""`
+	Postgres string `default:"postgres://checker:checker@localhost/checker_db?sslmode=disable"`
+	HTTPAddr string `default:"localhost"`
+	HTTPPort string `default:"8098"`
 }
 
 type ServiceInstance struct {
